@@ -14,7 +14,7 @@
 	<string>4DCB</string>
 	<key>CFBundleSignature</key>
 	<string>4D06</string>
-	<key>CFBundleVersion</key>
+	<key>CFBundleShortVersionString</key>
 	<string>1.0.0</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
