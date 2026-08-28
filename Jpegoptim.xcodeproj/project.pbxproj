@@ -52,6 +52,7 @@
 		D13116F41A03C7AF00DE1322 /* ARRAY_DATE.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D13116F21A03C7AF00DE1322 /* ARRAY_DATE.cpp */; };
 		D13116F51A03C7AF00DE1322 /* ARRAY_DATE.h in Headers */ = {isa = PBXBuildFile; fileRef = D13116F31A03C7AF00DE1322 /* ARRAY_DATE.h */; };
 		D134D4AC1A030BA0008D14EF /* manifest.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = D134D4A91A030B06008D14EF /* manifest.json */; };
+		D137E21430416EA500930C34 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D137E21330416EA500930C34 /* libjpeg.a */; };
 		D175D9CD1A02E8DD0006B569 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D175D9CC1A02E8DD0006B569 /* CoreGraphics.framework */; };
 /* End PBXBuildFile section */
 
@@ -116,6 +117,7 @@
 		D13116F21A03C7AF00DE1322 /* ARRAY_DATE.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; name = ARRAY_DATE.cpp; path = Classes/ARRAY_DATE.cpp; sourceTree = "<group>"; };
 		D13116F31A03C7AF00DE1322 /* ARRAY_DATE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ARRAY_DATE.h; path = Classes/ARRAY_DATE.h; sourceTree = "<group>"; };
 		D134D4A91A030B06008D14EF /* manifest.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = manifest.json; sourceTree = "<group>"; };
+		D137E21330416EA500930C34 /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libjpeg.a; path = a/libjpeg.a; sourceTree = "<group>"; };
 		D14D10DD1A03A8A5008B3411 /* constants.xlf */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = constants.xlf; sourceTree = "<group>"; };
 		D175D9CC1A02E8DD0006B569 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -125,6 +127,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D137E21430416EA500930C34 /* libjpeg.a in Frameworks */,
 				D13116C71A03B5B600DE1322 /* AppKit.framework in Frameworks */,
 				D175D9CD1A02E8DD0006B569 /* CoreGraphics.framework in Frameworks */,
 				D130064F12F02D9700702C0E /* Cocoa.framework in Frameworks */,
@@ -257,6 +260,7 @@
 		D137E211304163CF00930C34 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D137E21330416EA500930C34 /* libjpeg.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";

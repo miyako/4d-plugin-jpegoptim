@@ -9,19 +9,19 @@
 	<key>CFBundleExecutable</key>
 	<string>Jpegoptim</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.4D.4DPlugin.jpegoptim</string>
+	<string>com.4D.jpegoptim</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
 	<string>4DCB</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0.3</string>
 	<key>CFBundleSignature</key>
 	<string>4D06</string>
 	<key>CFBundleSupportedPlatforms</key>
 	<array>
 		<string>MacOSX</string>
 	</array>
-	<key>CFBundleVersion</key>
-	<string>14.3</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 	<key>DTCompiler</key>
