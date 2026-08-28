@@ -9,6 +9,7 @@
  # --------------------------------------------------------------------------------*/
 
 #include "jpeglib.h"
+#include <setjmp.h>
 
 #define JPEG_STRIP_XMP 1
 #define JPEG_STRIP_ICC 2
