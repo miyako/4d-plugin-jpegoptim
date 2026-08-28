@@ -1,3 +1,8 @@
 build/*
 jpegoptim/Jpegoptim.4dbase/userPreferences.*
 jpegoptim/Jpegoptim.4dbase/Project/DerivedData/*
+.vs/*
+Objs/*
+Jpegoptim.4dbase/Plugins/Jpegoptim.bundle/Contents/Windows64/Jpegoptim.exp
+Jpegoptim.4dbase/Plugins/Jpegoptim.bundle/Contents/Windows64/Jpegoptim.lib
+Jpegoptim.vcxproj.user
