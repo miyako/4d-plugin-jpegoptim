@@ -1,0 +1,27 @@
+name: Native ownership
+
+on:
+  pull_request:
+    paths:
+      - '4D Plugin API/**'
+      - '.github/tests/ownership_host.mm'
+      - '.github/tests/test_ownership.py'
+      - '.github/workflows/ownership.yml'
+  push:
+    branches: [master]
+    paths:
+      - '4D Plugin API/**'
+      - '.github/tests/ownership_host.mm'
+      - '.github/tests/test_ownership.py'
+      - '.github/workflows/ownership.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  ownership:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run unsigned full-SDK sanitizer shim
+        run: PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s .github/tests -p test_ownership.py -v

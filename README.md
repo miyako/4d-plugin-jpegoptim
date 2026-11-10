@@ -148,6 +148,91 @@ assuming another plugin's layout.
 
 ---
 
+## Native ownership maintenance
+
+The bounded audit at source baseline
+`72a947143a0d5478a604aff446b848eccadef381` covers all tracked native entry,
+helper, wrapper and header surfaces, including dormant code compiled by both
+projects. It does not certify every allocation-failure path.
+
+| Surface | Reachability and ownership findings |
+| :--- | :--- |
+| `4DPlugin.cpp`, `4DPlugin.h` | Both projects compile the entry, dispatcher, JPEG helpers and command. `FourDPackex` in the SDK (Windows `.def`, macOS visibility attribute) calls `PluginMain`; selector 1 alone dispatches `Jpegoptim(&P;&L;&L):P`, matching source and bundled manifests. Its final created picture is handed to the caller; no text-array command is exported. Picture-data type strings are used only after a successful error check; their ownership is deferred below. |
+| `Classes/C_PICTURE.{cpp,h}` | Compiled but not called by the sole dispatcher command. Path input now has exactly one argument owner; the loaded output is retained before its argument is cleared. `setBytes` releases the temporary after retaining. Conversion, grayscale, size and thumbnail inputs start Undefined before shallow setters, avoiding overwritten empty owners. Conversion divides returned bytes by UTF-16 unit size. Borrowed size/thumbnail inputs still detach before cleanup; conversion/grayscale/thumbnail results still transfer an owning reference. |
+| `Classes/C_TEXT.{cpp,h}`, `ARRAY_TEXT.{cpp,h}` | Compiled, transitively included by the umbrella SDK header. Inputs copy borrowed text into C++ strings. Scalar outputs and returns use the engine content setter, not descriptor transfer. Array output independently creates each element and correctly leaves accepted transfers owned by the array; there is no immediate post-transfer disposal defect here. Initial creation and resize failure handling remain deferred. |
+| `Classes/C_POINTER.{cpp,h}` | Compiled dormant metadata/reference wrapper. `GetPointerValue` ownership and relabeling are ambiguous; unchanged, not certified safe. |
+| `Classes/C_BLOB.{cpp,h}` | Compiled dormant byte-vector/handle wrapper and hex/base64 helpers. Text uses copied `C_TEXT` contents; no string descriptor transfer. General BLOB allocation/algorithm hardening is outside this audit. |
+| `Classes/C_DATE`, `C_INTEGER`, `C_LONGINT`, `C_REAL`, `C_TIME` (`.cpp` and `.h`) | All compiled. Primitive scalar parameter/return wrappers, no owning string descriptor. Only `C_LONGINT` is used directly by the command. |
+| `Classes/ARRAY_BOOLEAN`, `ARRAY_DATE`, `ARRAY_INTEGER`, `ARRAY_LONGINT`, `ARRAY_REAL`, `ARRAY_TIME` (`.cpp` and `.h`) | All compiled dormant numeric/date array wrappers; copied primitive contents, no string descriptor cleanup. Initial creation/resize failure concerns are not excluded by their scalar element kinds. |
+| `Classes/C_TYPES.h`, `4D Plugin_Prefix.pch` | Standard string/vector typedefs, platform framework imports and Carbon prefix; no runtime string owner. |
+| `4DPluginAPI.{c,h,def}`, `EntryPoints.h`, `PrivateTypes.h`, `PublicTypes.h`, `Flags.h`, SDK licence | Bundled SDK engine/ABI boundary, excluded from production edits. The full engine implementation is compiled unchanged by the regression, not replaced with API snippets. |
+| `include/{jconfig,jerror,jmorecfg,jpeglib,jpegoptim}.h`, `include/{jpegdest,jpegoptim,misc}.c`, `a/libjpeg.a`, `lib/windows64/jpeg.lib` | Third-party codec/configuration inputs and libraries, excluded from production fixes. The native projects compile the first-party plugin implementation and link static libjpeg; the alternative codec C files are tracked but not native Sources/ClCompile entries. |
+| Both native projects, solution/filters, plist/localization, constants, source/bundled manifests and prebuilt plugin | Inspected for build/include/export reachability; unchanged. Example databases, user preferences, private documents and image files are not audit inputs. |
+
+**SDK provenance:** the exact bundled engine Git blob is
+`478081f0238f6bc5393222f574bc2656f010b67b`; its umbrella header blob is
+`9054b45ffc7ff6f5b8d57529a3788a55d977b314`. Rename-follow history traces the
+engine through `9cbe65fe157d81420f380268600923aba4e459e1` to repository
+introduction `b3b9e9759c9f2e1413b4e51720c38f09908baac5`. The engine's `v14`
+and header's `v13` comments do not identify a verified upstream release. This
+engine differs from the Poppler skill reference blob
+`62f745e91d81ef2c3c901c656ea8e175d3b173e8`. Guidance was read from
+`miyako/skills/4d-skills/skills/4dplugin/SKILL.md` at `e6b492f`.
+
+**Exact local contracts:** `PA_SetStringInArray` accepts only
+`eVK_ArrayUnicode`, a non-null data handle, an index from zero through
+`fNbElements` inclusive, and a non-null string descriptor pointer. It disposes
+the old element and shallow-transfers the descriptor. Rejection retains the
+caller owner. `PA_GetStringInArray` is borrowed. Scalar string/picture variable
+setters shallow-alias and do not dispose old contents. Creating a typed
+string/picture variable can allocate an empty owner; use Undefined when the
+next operation is a shallow setter. `PA_ReturnString` instead calls
+`PA_SetUnistring`, forwarding content to the engine. All wrapper command calls
+are synchronous procedures; there are no first-party method callbacks, JSON
+Parse inputs, or object/collection getter calls in this older SDK integration.
+`PA_ExecuteCommandByID` returns raw kind 0 if its argument-handle allocation
+fails (normalizing it can incorrectly classify it as string); do not clear
+that sentinel. Method allocation failure returns Undefined instead.
+
+**Regression:** on macOS, run
+`PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s .github/tests -p test_ownership.py -v`.
+The harness compiles all 16 actual wrapper translation units and the full,
+hash-pinned SDK engine with ASan/UBSan. Alignment instrumentation alone is
+disabled for the SDK's intentional packed ABI; macOS LSan is unavailable,
+so explicit string-allocation, picture-reference and handle balances must
+all reach zero. The engine-boundary shim preserves byte input/output counts,
+UTF-16 units, capacity including room for termination, allocated/null empties,
+shallow scalar ownership and conditional array transfer. It models synchronous
+picture commands with synthetic objects; it never opens a path or image.
+ASCII, BMP, supplementary and empty text, independent outputs, borrowed copies,
+replacement/shrink/clear/rejections, scalar content returns, surviving picture
+handoffs and command-handle failures are exercised.
+
+The same harness can target an immutable `git archive` extraction with
+`OWNERSHIP_SOURCE_ROOT=/absolute/path/to/extraction`. Baseline has eight named
+defect-test failures: path single-disposal/output retention, `setBytes`
+temporary release, copy byte/unit boundary (ASan heap-buffer-overflow for
+`.png`), copy initial owners, grayscale initial owner, size initial owner,
+thumbnail initial owner, and command-handle failure argument cleanup. Normal arrays and scalar content copies already
+pass baseline. The fix passes these same assertions. The `Native ownership`
+workflow runs only this unsigned shim on `macos-latest`; existing manual Build
+and Bump workflows and their signing/publication behavior are untouched.
+
+**Deferred, not certified:** `ARRAY_TEXT::toParamAtIndex` and the numeric array
+family publish created descriptors without a reliable initial-allocation error
+boundary. On initial failure a null array handle rejects string insertions;
+the wrapper must not publish success or lose the original parameter. The void
+wrappers have no established error return, and `PluginMain` swallows exceptions;
+safe error propagation requires a separate design. SDK resize updates the count
+even when handle resize fails, so normal array tests do **not** certify
+resize-OOM safety. SDK string creation does not update `PA_GetLastError`;
+string/picture creation failures are not covered by the command-handle failure
+test. Pointer metadata, SDK-only application-path outputs and picture-data
+returned-string ownership remain unresolved. No SDK internals, codec algorithms,
+manifests, projects or binaries were changed. These shim results do not certify
+Windows or an actual 4D host, and no release build/sign/notarize/package/upload
+or manual workflow dispatch is performed by this validation.
+
 ## Requirements
 
 - 4D v15 or later (uses `PA_CreatePicture`, `PA_GetPictureData`, `PA_YieldAbsolute`).
